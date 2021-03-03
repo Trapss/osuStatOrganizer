@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+  <link rel="stylesheet" href="./index.css">
+</head>
+
+<body>
+
+  <div class="ui">
+    <label class="inputLabel">Username </label> <input type="text" id="usernameInput" value="">
+    <label class="inputLabel">API Key </label> <input type="password" id="apiKeyInput" value="">
+    <button onclick="update()" id="submitButton">Update</button>
+    <button onclick="infoAlert()" id="submitButton">Info</button>
+  </div>
+
+  <canvas id="playerInfoCanvas" width="990" height="675"></canvas>
+
+  <div class="graphsContainer">
+    <canvas id="rankDisCanvas" width="500" height="340"></canvas>
+    <canvas id="hitDisCanvas" width="500" height="340"></canvas>
+  </div>
+
+  <script>
+    let rankDisData = [0, 0, 0, 0, 0];
+    let hitDisData = [0, 0, 0, 0, 0];
+    let image = new Image();
+
+    let formatPP;
+    let formatAcc;
+    let formatLevel;
+    let accOffset;
+    let usernameRankOffset;
+
+    const playerInfoContext = document.getElementById('playerInfoCanvas').getContext('2d');
+    const rankDisContext = document.getElementById('rankDisCanvas').getContext('2d');
+    const hitDisContext = document.getElementById('hitDisCanvas').getContext('2d');
+
+    let rankDisGraph = new Chart(rankDisContext, {
+      type: 'pie',
+      data: {
+        labels: ['SSH', 'SS', 'SH', 'S', 'A'],
+        datasets: [{
+          label: 'Rank Distribution',
+          data: rankDisData,
+          backgroundColor: [
+            'rgba(255, 99, 132, 0.2)',
+            'rgba(54, 162, 235, 0.2)',
+            'rgba(255, 206, 86, 0.2)',
+            'rgba(75, 192, 192, 0.2)',
+            'rgba(153, 102, 255, 0.2)',
+            'rgba(255, 159, 64, 0.2)'
+          ],
+          borderColor: [
+            'rgba(255, 99, 132, 1)',
+            'rgba(54, 162, 235, 1)',
+            'rgba(255, 206, 86, 1)',
+            'rgba(75, 192, 192, 1)',
+            'rgba(153, 102, 255, 1)',
+            'rgba(255, 159, 64, 1)'
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: false
+      }
+    });
+
+    let hitDisGraph = new Chart(hitDisContext, {
+      type: 'pie',
+      data: {
+        labels: ['300', '100', '50'],
+        datasets: [{
+          label: 'Accuracy Distribution',
+          data: rankDisData,
+          backgroundColor: [
+            'rgba(255, 99, 132, 0.2)',
+            'rgba(54, 162, 235, 0.2)',
+            'rgba(255, 206, 86, 0.2)',
+            'rgba(75, 192, 192, 0.2)',
+            'rgba(153, 102, 255, 0.2)',
+            'rgba(255, 159, 64, 0.2)'
+          ],
+          borderColor: [
+            'rgba(255, 99, 132, 1)',
+            'rgba(54, 162, 235, 1)',
+            'rgba(255, 206, 86, 1)',
+            'rgba(75, 192, 192, 1)',
+            'rgba(153, 102, 255, 1)',
+            'rgba(255, 159, 64, 1)'
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: false
+      }
+    });
+
+    function numberWithCommas(x) {
+      return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    function getTextWidth(text, font) {
+      var canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement("canvas"));
+      var context = canvas.getContext("2d");
+      context.font = font;
+      var metrics = context.measureText(text);
+      return metrics.width;
+    }
+
+    function drawDataURIOnCanvas(strDataURI, canvas) {
+      var img = new window.Image();
+      img.addEventListener("load", function() {
+        canvas.getContext("2d").drawImage(img, 0, 0);
+      });
+      img.setAttribute("src", strDataURI);
+    }
+
+    function secondsToDhms(seconds) {
+      seconds = Number(seconds);
+      var d = Math.floor(seconds / (3600 * 24));
+      var h = Math.floor(seconds % (3600 * 24) / 3600);
+      var m = Math.floor(seconds % 3600 / 60);
+      var s = Math.floor(seconds % 60);
+
+      var dDisplay = d > 0 ? d + (d == 1 ? " day, " : " days, ") : "";
+      var hDisplay = h > 0 ? h + (h == 1 ? " hour, " : " hours, ") : "";
+      var mDisplay = m > 0 ? m + (m == 1 ? " minute, " : " minutes, ") : "";
+      var sDisplay = s > 0 ? s + (s == 1 ? " second" : " seconds") : "";
+      return dDisplay + hDisplay + mDisplay + sDisplay;
+    }
+
+    function infoAlert() {
+      alert("Basic Stat Organizer for osu!\nNo Data is saved/stored")
+    }
+
+    function update() {
+      let user = document.getElementById("usernameInput").value;
+      let apiKey = document.getElementById("apiKeyInput").value;
+
+      fetch(`https://osu.ppy.sh/api/get_user?k=${apiKey}&u=${user}`)
+        .then(r => {
+          let userData = r.json().then(userData => {
+
+            playerInfoContext.clearRect(0, 0, playerInfoContext.canvas.width, playerInfoContext.canvas.height);
+            playerInfoContext.beginPath();
+
+            rankDisGraph.clear();
+            hitDisGraph.clear();
+
+            formatPP = numberWithCommas(Math.floor(userData[0].pp_raw));
+            formatAcc = parseFloat(userData[0].accuracy).toFixed(2);
+            formatLevel = Math.trunc(userData[0].level);
+            accOffset = getTextWidth(formatPP, "30pt arial") - getTextWidth(formatAcc, "15pt arial") + 2;
+            usernameRankOffset = getTextWidth(userData[0].username + " - #" + numberWithCommas(userData[0].pp_rank), "30pt arial");
+
+            drawDataURIOnCanvas("https://a.ppy.sh/" + userData[0].user_id, playerInfoCanvas);
+
+            playerInfoContext.fillStyle = "#ffffff";
+            playerInfoContext.font = "30px Arial";
+
+            // username and rank
+            playerInfoContext.fillText(userData[0].username + " | #" + numberWithCommas(userData[0].pp_rank), 260, 28);
+            // pp values
+            playerInfoContext.fillText(formatPP + "pp", usernameRankOffset + 280, 28);
+
+            playerInfoContext.font = "15px Arial";
+
+            // country and rank
+            playerInfoContext.fillText(userData[0].country + " | #" + numberWithCommas(userData[0].pp_country_rank), 260, 52);
+            // acc
+            playerInfoContext.fillText(formatAcc + "%", usernameRankOffset + 280 + accOffset, 52);
+            // level
+            playerInfoContext.fillText("Level " + formatLevel, 260, 72);
+
+            // total score
+            playerInfoContext.fillText(numberWithCommas(userData[0].total_score) + " Total Score", 260, 212)
+            // ranked score
+            playerInfoContext.fillText(numberWithCommas(userData[0].ranked_score) + " Ranked Score", 260, 232)
+
+            // play time
+            playerInfoContext.fillText(secondsToDhms(userData[0].total_seconds_played) + " Played", 260, 252)
+
+            rankDisData = [userData[0].count_rank_ssh, userData[0].count_rank_ss, userData[0].count_rank_sh, userData[0].count_rank_s, userData[0].count_rank_a];
+            rankDisGraph.data.datasets[0].data = rankDisData;
+            rankDisGraph.update();
+
+            hitDisData = [userData[0].count300, userData[0].count100, userData[0].count50];
+            hitDisGraph.data.datasets[0].data = hitDisData;
+            hitDisGraph.update();
+          });
+        })
+        .catch(error => {
+          console.log("Error: " + error);
+          alert('There was an error processing this.\nPlease check that your api key and/or username is correct');
+        });
+    }
+  </script>
+
+</body>

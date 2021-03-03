@@ -1,0 +1,52 @@
+body {
+  background-color: #36393e;
+}
+
+.ui {
+  text-align: center;
+}
+
+.graphsContainer {
+  display: inline-block;
+  text-align: center;
+}
+
+.inputLabel {
+  color: #ffffff;
+}
+
+#submitButton {
+  width: 10%;
+  padding: 15px;
+  margin-top: 5px;
+  background-color: #2C2F33;
+  border: 0;
+  cursor: pointer;
+  font-weight: bold;
+  color: #ffffff;
+  transition: background-color 0.2s;
+}
+
+#apiKeyInput {
+  width: 10%;
+  padding: 15px;
+  margin-top: 5px;
+  background-color: #2C2F33;
+  border: 0;
+  cursor: pointer;
+  font-weight: bold;
+  color: #ffffff;
+  transition: background-color 0.2s;
+}
+
+#usernameInput {
+  width: 10%;
+  padding: 15px;
+  margin-top: 5px;
+  background-color: #2C2F33;
+  border: 0;
+  cursor: pointer;
+  font-weight: bold;
+  color: #ffffff;
+  transition: background-color 0.2s;
+}
